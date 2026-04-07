@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Ultra FREE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        [x-cloak] { display: none !important; }
+        body { background-color: #0e0e10; color: #e3e3e3; }
+        .sidebar-glass { background: #18191b; border-right: 1px solid #2d2e30; }
+        .user-msg { background: #2b2d31; border-radius: 18px 18px 2px 18px; }
+        .input-box { background: #1e1f20; border: 1px solid #3c4043; border-radius: 24px; transition: 0.2s; }
+        .input-box:focus-within { border-color: #8ab4f8; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #3c4043; border-radius: 10px; }
+    </style>
+</head>
+<body x-data="chatApp()" x-init="init()" class="overflow-hidden">
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="fixed inset-y-0 left-0 z-50 w-64 sidebar-glass flex flex-col transition-transform md:relative md:translate-x-0" 
+               :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
+            <div class="p-4">
+                <button @click="createNewChat()" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#131314] hover:bg-[#2d2e30] border border-[#3c4043] transition-all">
+                    <i class="fa-solid fa-plus text-blue-400"></i>
+                    <span class="text-sm font-bold">New Chat</span>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scroll px-3 space-y-1">
+                <template x-for="chat in history" :key="chat.id">
+                    <div @click="loadChat(chat.id)" class="group flex items-center p-3 rounded-xl cursor-pointer hover:bg-[#2d2e30]"
+                         :class="currentChatId === chat.id ? 'bg-[#2d2e30]' : ''">
+                        <i class="fa-regular fa-message text-xs mr-3 text-gray-500"></i>
+                        <span class="text-xs truncate flex-1" x-text="chat.title"></span>
+                        <i @click.stop="deleteChat(chat.id)" class="fa-solid fa-trash text-[10px] opacity-0 group-hover:opacity-100 hover:text-red-400"></i>
+                    </div>
+                </template>
+            </div>
+            <div class="p-4 border-t border-gray-800">
+                <button @click="showSettings = true" class="w-full text-left text-xs text-gray-500 hover:text-white transition-colors">
+                    <i class="fa-solid fa-key mr-2"></i>API Settings
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="flex-1 flex flex-col relative bg-[#0e0e10]">
+            <header class="h-14 flex items-center justify-between px-6">
+                <button @click="sidebarOpen = !sidebarOpen" class="md:hidden"><i class="fa-solid fa-bars"></i></button>
+                <span class="font-bold text-sm tracking-widest text-blue-400 uppercase">Gemini Free Pro</span>
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">U</div>
+            </header>
+
+            <div id="chat-window" class="flex-1 overflow-y-auto custom-scroll p-4 md:px-20 space-y-6 pb-32">
+                <template x-if="messages.length === 0">
+                    <div class="h-full flex flex-col items-center justify-center text-center opacity-50">
+                        <i class="fa-solid fa-bolt-lightning text-4xl mb-4 text-blue-500"></i>
+                        <h2 class="text-xl font-bold">Everything is Free here.</h2>
+                        <p class="text-xs mt-2">Chat with Gemini, or type <code class="text-blue-400">/draw a cat</code> to generate images for free.</p>
+                    </div>
+                </template>
+
+                <template x-for="(msg, index) in messages" :key="index">
+                    <div class="flex w-full" :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+                        <div class="max-w-[90%] md:max-w-[70%] flex gap-3" :class="msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'">
+                            <div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px]"
+                                 :class="msg.role === 'user' ? 'bg-blue-600' : 'bg-gray-800 border border-gray-700'">
+                                <i :class="msg.role === 'user' ? 'fa-solid fa-user' : 'fa-solid fa-microchip'"></i>
+                            </div>
+                            <div :class="msg.role === 'user' ? 'user-msg p-3' : 'w-full py-2'">
+                                <div class="text-sm leading-relaxed prose prose-invert" x-html="renderMarkdown(msg.content)"></div>
+                                
+                                <template x-if="msg.image">
+                                    <div class="mt-3 rounded-xl overflow-hidden border border-gray-800 shadow-2xl">
+                                        <img :src="msg.image" class="w-full h-auto bg-gray-900" @load="scrollToBottom()">
+                                        <div class="p-2 bg-black/40 text-[9px] flex justify-between">
+                                            <span>Free Generation (Pollinations)</span>
+                                            <a :href="msg.image" target="_blank" class="text-blue-400">View Full</a>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <div x-show="isLoading" class="flex gap-3 animate-pulse">
+                    <div class="w-8 h-8 rounded-lg bg-gray-800"></div>
+                    <div class="h-4 bg-gray-800 rounded w-1/2 mt-2"></div>
+                </div>
+            </div>
+
+            <!-- Input -->
+            <div class="absolute bottom-0 w-full p-4 md:px-20 bg-gradient-to-t from-[#0e0e10] to-transparent">
+                <div class="max-w-3xl mx-auto input-box flex items-center p-1.5 px-4">
+                    <input x-model="userInput" @keydown.enter="sendMessage()" type="text" placeholder="Message or /draw..." 
+                           class="flex-1 bg-transparent py-3 px-2 outline-none text-sm">
+                    <button @click="sendMessage()" class="p-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-500 transition-all">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Settings -->
+        <div x-show="showSettings" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+            <div class="bg-[#1e1f20] w-full max-w-sm p-6 rounded-2xl border border-gray-800 shadow-2xl">
+                <h3 class="font-bold mb-4">Gemini API Key (Required)</h3>
+                <input type="password" x-model="settings.apiKey" placeholder="AIzaSy..." class="w-full bg-black border border-gray-800 rounded-xl p-3 text-white outline-none mb-4">
+                <button @click="saveSettings()" class="w-full bg-blue-600 py-3 rounded-xl font-bold">Save Changes</button>
+                <p class="text-[10px] text-gray-500 mt-4 text-center">Note: Image generation works even without a key!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function chatApp() {
+            return {
+                sidebarOpen: window.innerWidth > 768,
+                showSettings: false,
+                isLoading: false,
+                userInput: '',
+                currentChatId: null,
+                messages: [],
+                history: [],
+                settings: { apiKey: '' },
+
+                init() {
+                    this.history = JSON.parse(localStorage.getItem('free_gemini_history') || '[]');
+                    this.settings = JSON.parse(localStorage.getItem('free_gemini_settings') || '{"apiKey":""}');
+                    if (this.history.length > 0) this.loadChat(this.history[0].id);
+                    else this.createNewChat();
+                },
+
+                saveSettings() {
+                    localStorage.setItem('free_gemini_settings', JSON.stringify(this.settings));
+                    this.showSettings = false;
+                },
+
+                createNewChat() {
+                    this.currentChatId = Date.now();
+                    this.messages = [];
+                    this.userInput = '';
+                },
+
+                loadChat(id) {
+                    const chat = this.history.find(h => h.id === id);
+                    if (chat) {
+                        this.currentChatId = id;
+                        this.messages = JSON.parse(JSON.stringify(chat.messages));
+                        this.scrollToBottom();
+                    }
+                },
+
+                deleteChat(id) {
+                    this.history = this.history.filter(h => h.id !== id);
+                    localStorage.setItem('free_gemini_history', JSON.stringify(this.history));
+                    if (this.currentChatId === id) this.createNewChat();
+                },
+
+                async sendMessage() {
+                    const input = this.userInput.trim();
+                    if (!input) return;
+
+                    this.userInput = '';
+                    this.messages.push({ role: 'user', content: input });
+                    this.isLoading = true;
+                    this.scrollToBottom();
+
+                    try {
+                        if (input.toLowerCase().startsWith('/draw')) {
+                            // FREE IMAGE GENERATION (Pollinations AI)
+                            const prompt = input.replace(/\/draw\s*/i, '');
+                            const seed = Math.floor(Math.random() * 1000000);
+                            const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}&width=1024&height=1024&nologo=true`;
+                            
+                            this.messages.push({ 
+                                role: 'assistant', 
+                                content: `Generating: **${prompt}**`, 
+                                image: imgUrl 
+                            });
+                        } else {
+                            // FREE TEXT (Google Gemini 1.5 Flash)
+                            if(!this.settings.apiKey) throw new Error("Please add your Google API key in Settings.");
+                            
+                            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.settings.apiKey}`;
+                            const resp = await fetch(url, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    contents: this.messages.filter(m => !m.image).map(m => ({
+                                        role: m.role === 'assistant' ? 'model' : 'user',
+                                        parts: [{ text: m.content }]
+                                    }))
+                                })
+                            });
+                            const data = await resp.json();
+                            if (data.error) throw new Error(data.error.message);
+                            this.messages.push({ role: 'assistant', content: data.candidates[0].content.parts[0].text });
+                        }
+                        
+                        this.updateHistory(input);
+                    } catch (e) {
+                        this.messages.push({ role: 'assistant', content: `❌ Error: ${e.message}` });
+                    } finally {
+                        this.isLoading = false;
+                        this.scrollToBottom();
+                    }
+                },
+
+                updateHistory(text) {
+                    const idx = this.history.findIndex(h => h.id === this.currentChatId);
+                    const chatTitle = text.substring(0, 25);
+                    if (idx > -1) {
+                        this.history[idx].messages = [...this.messages];
+                    } else {
+                        this.history.unshift({ id: this.currentChatId, title: chatTitle, messages: [...this.messages] });
+                    }
+                    localStorage.setItem('free_gemini_history', JSON.stringify(this.history));
+                },
+
+                scrollToBottom() {
+                    setTimeout(() => {
+                        const win = document.getElementById('chat-window');
+                        win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' });
+                    }, 100);
+                },
+
+                renderMarkdown(text) {
+                    return text
+                        .replace(/[<>]/g, m => ({'<':'&lt;','>':'&gt;'}[m]))
+                        .replace(/\n/g, '<br>')
+                        .replace(/\*\*(.*?)\*\*/g, '<b class="text-blue-400">$1</b>')
+                        .replace(/`(.*?)`/g, '<code class="bg-gray-800 px-1 rounded text-pink-400">$1</code>');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
