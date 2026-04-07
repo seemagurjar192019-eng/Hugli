@@ -3,349 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Pro Ultra - Free Edition</title>
+    <title>Hugli AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        [x-cloak] { display: none !important; }
-        body { background-color: #0e0e10; color: #e3e3e3; font-family: 'Inter', sans-serif; }
-        .sidebar-glass { background: #18191b; border-right: 1px solid #2d2e30; z-index: 50; }
-        .overlay-blur { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 40; }
-        .user-msg { background: #2b2d31; border-radius: 18px 18px 2px 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .input-area { background: #1e1f20; border: 1px solid #3c4043; border-radius: 28px; transition: 0.3s; }
-        .input-area:focus-within { border-color: #8ab4f8; background: #252627; }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #3c4043; border-radius: 10px; }
-        pre { background: #000 !important; padding: 15px; border-radius: 12px; overflow-x: auto; border: 1px solid #333; margin: 10px 0; }
-        code { font-family: 'Fira Code', monospace; font-size: 0.9em; }
-    </style>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body x-data="chatApp()" x-init="init()" class="overflow-hidden">
+<body x-data="chatApp()" class="flex h-screen bg-[#212121] text-[#ececec]">
 
-    <div class="flex h-screen relative">
+    <aside class="w-64 bg-[#171717] hidden md:flex flex-col border-r border-[#303030] p-4">
+        <h1 class="text-xl font-bold mb-8 px-2 tracking-tight">Hugli AI</h1>
+        <button @click="createNewChat()" class="flex items-center gap-3 p-3 hover:bg-[#2f2f2f] rounded-lg transition border border-[#424242] text-sm">
+            <span class="text-lg">+</span> New Chat
+        </button>
+        <div class="flex-1 mt-10 overflow-y-auto space-y-2">
+            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest px-2">Recent</p>
+            <div class="p-2 text-xs text-gray-500 italic px-2">No history yet</div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col relative h-full">
         
-        <!-- Mobile Sidebar Overlay -->
-        <div x-show="sidebarOpen" 
-             x-transition:enter="transition opacity-0 duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition opacity-100 duration-300"
-             @click="sidebarOpen = false"
-             class="fixed inset-0 overlay-blur md:hidden" x-cloak>
-        </div>
+        <header class="md:hidden p-4 border-b border-[#303030] flex justify-between items-center">
+            <span class="font-bold">Hugli AI</span>
+            <button @click="createNewChat()" class="text-xl">+</button>
+        </header>
 
-        <!-- Sidebar -->
-        <aside class="fixed inset-y-0 left-0 w-72 sidebar-glass flex flex-col transition-transform duration-300 md:relative md:translate-x-0" 
-               :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
-            
-            <!-- Sidebar Header -->
-            <div class="p-4 flex items-center justify-between border-b border-gray-800/50">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <i class="fa-solid fa-robot text-white text-xs"></i>
-                    </div>
-                    <span class="font-black tracking-tighter text-lg text-white">AI_LAB</span>
+        <div id="chat-window" class="flex-1 overflow-y-auto px-4 md:px-[20%] py-10 space-y-10">
+            <template x-if="messages.length === 0">
+                <div class="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-50">
+                    <div class="w-12 h-12 bg-[#303030] rounded-full flex items-center justify-center font-bold text-xl">H</div>
+                    <p class="text-xl font-medium">Main aapki kaise madad kar sakta hoon?</p>
                 </div>
-                <button @click="sidebarOpen = false" class="md:hidden text-gray-400 hover:text-white p-2">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
-            </div>
+            </template>
 
-            <!-- New Chat Button -->
-            <div class="p-4">
-                <button @click="createNewChat(); if(window.innerWidth < 768) sidebarOpen = false" 
-                        class="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-[#131314] hover:bg-[#2d2e30] border border-[#3c4043] transition-all group">
-                    <i class="fa-solid fa-plus text-blue-400 group-hover:rotate-90 transition-transform"></i>
-                    <span class="text-sm font-bold">New Session</span>
-                </button>
-            </div>
-
-            <!-- History List -->
-            <div class="flex-1 overflow-y-auto custom-scroll px-3 space-y-1">
-                <p class="text-[10px] font-black text-gray-500 px-4 py-2 uppercase tracking-[2px]">Recent Conversations</p>
-                <template x-for="chat in history" :key="chat.id">
-                    <div class="group relative flex items-center p-3 rounded-xl cursor-pointer hover:bg-[#2d2e30] transition-all"
-                         @click="loadChat(chat.id); if(window.innerWidth < 768) sidebarOpen = false"
-                         :class="currentChatId === chat.id ? 'bg-[#2d2e30] border-l-4 border-blue-500' : ''">
-                        <i class="fa-regular fa-comment-dots text-sm mr-3 text-gray-500"></i>
-                        <span class="text-xs truncate w-44 text-gray-300" x-text="chat.title"></span>
-                        <button @click.stop="deleteChat(chat.id)" class="absolute right-2 opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 p-1">
-                            <i class="fa-solid fa-trash-can text-[10px]"></i>
-                        </button>
+            <template x-for="(msg, index) in messages" :key="index">
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div :class="msg.role === 'user' ? 'bg-blue-600' : 'bg-green-600'" 
+                             class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+                             x-text="msg.role === 'user' ? 'U' : 'H'"></div>
+                        <span class="text-xs font-bold uppercase tracking-tighter text-gray-400" 
+                              x-text="msg.role === 'user' ? 'You' : 'Hugli AI'"></span>
                     </div>
-                </template>
-            </div>
-
-            <!-- Sidebar Footer -->
-            <div class="p-4 border-t border-gray-800">
-                <button @click="showSettings = true" class="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-[#2d2e30] transition-colors group">
-                    <i class="fa-solid fa-sliders text-gray-400 group-hover:text-blue-400"></i>
-                    <span class="text-sm font-medium">Core Settings</span>
-                </button>
-            </div>
-        </aside>
-
-        <!-- Main Chat Area -->
-        <main class="flex-1 flex flex-col min-w-0 bg-[#0e0e10]">
-            
-            <!-- Top Header -->
-            <header class="h-16 flex items-center justify-between px-6 border-b border-gray-800/30">
-                <button @click="sidebarOpen = true" class="md:hidden p-2 text-gray-400"><i class="fa-solid fa-bars-staggered"></i></button>
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Gemini 1.5 Flash + Pollinations</span>
-                </div>
-                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-xs font-black shadow-lg">U</div>
-            </header>
-
-            <!-- Messages Container -->
-            <div id="chat-window" class="flex-1 overflow-y-auto custom-scroll p-4 md:px-12 lg:px-32 space-y-8 pb-40">
-                
-                <!-- Welcome Screen -->
-                <template x-if="messages.length === 0">
-                    <div class="h-full flex flex-col items-center justify-center text-center space-y-6">
-                        <div class="w-16 h-16 bg-blue-500/10 rounded-3xl flex items-center justify-center text-blue-500 text-3xl">
-                            <i class="fa-solid fa-wand-sparkles"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-3xl font-black text-white">How can I help you?</h1>
-                            <p class="text-gray-500 mt-2 text-sm max-w-sm mx-auto">Ask me anything or use <span class="text-blue-400">/draw</span> followed by a description to generate AI images for free.</p>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Message Loop -->
-                <template x-for="(msg, index) in messages" :key="index">
-                    <div class="flex w-full" :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
-                        <div class="max-w-[95%] md:max-w-[85%] flex gap-4" :class="msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'">
-                            <div class="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center mt-1 shadow-sm"
-                                 :class="msg.role === 'user' ? 'bg-blue-600' : 'bg-[#1e1f20] border border-gray-700'">
-                                <i :class="msg.role === 'user' ? 'fa-solid fa-user text-[10px]' : 'fa-solid fa-bolt text-blue-400 text-[10px]'"></i>
-                            </div>
-                            <div :class="msg.role === 'user' ? 'user-msg p-4' : 'w-full py-2'">
-                                <div class="text-sm md:text-base leading-relaxed break-words prose prose-invert max-w-none" x-html="renderMarkdown(msg.content)"></div>
-                                
-                                <!-- Image Handling -->
-                                <template x-if="msg.image">
-                                    <div class="mt-4 rounded-2xl overflow-hidden border border-gray-800 shadow-2xl group relative">
-                                        <img :src="msg.image" class="w-full h-auto max-h-[500px] object-contain bg-black/40" @load="scrollToBottom()">
-                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                                            <a :href="msg.image" target="_blank" class="bg-white/10 p-3 rounded-full hover:bg-blue-600 transition-colors">
-                                                <i class="fa-solid fa-expand"></i>
-                                            </a>
-                                            <a :href="msg.image" download="ai_gen.png" class="bg-white/10 p-3 rounded-full hover:bg-green-600 transition-colors">
-                                                <i class="fa-solid fa-download"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Loading State -->
-                <div x-show="isLoading" class="flex gap-4 animate-pulse">
-                    <div class="w-8 h-8 rounded-xl bg-gray-800"></div>
-                    <div class="space-y-3 flex-1 pt-2">
-                        <div class="h-3 bg-gray-800 rounded w-1/4"></div>
-                        <div class="h-3 bg-gray-800 rounded w-3/4"></div>
+                    <div :class="msg.role === 'user' ? 'user-bubble' : 'ai-content'" 
+                         class="text-[15px] leading-relaxed"
+                         x-html="renderMarkdown(msg.content)">
                     </div>
                 </div>
-            </div>
+            </template>
 
-            <!-- Input Box -->
-            <div class="absolute bottom-0 left-0 w-full p-4 md:px-12 lg:px-32 bg-gradient-to-t from-[#0e0e10] via-[#0e0e10] to-transparent">
-                <div class="max-w-4xl mx-auto relative">
-                    <div class="input-area flex items-center p-2 px-4 shadow-2xl">
-                        <input x-model="userInput" 
-                               @keydown.enter="sendMessage()" 
-                               type="text" 
-                               placeholder="Type your message or /draw to imagine..." 
-                               class="flex-1 bg-transparent py-3 px-2 outline-none text-sm md:text-base">
-                        <button @click="sendMessage()" :disabled="!userInput.trim() || isLoading" 
-                                class="ml-2 p-3 rounded-2xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-20 transition-all shadow-lg shadow-blue-600/20">
-                            <i class="fa-solid fa-paper-plane-top"></i>
-                        </button>
-                    </div>
-                    <p class="text-[10px] text-center mt-3 text-gray-600 font-medium tracking-wide">
-                        Powered by Google Gemini 1.5 & Pollinations AI • Fully Free Tier
-                    </p>
-                </div>
-            </div>
-        </main>
-
-        <!-- Settings Modal -->
-        <div x-show="showSettings" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div @click.away="showSettings = false" class="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
-            <div class="bg-[#18191b] w-full max-w-md p-8 rounded-[2.5rem] border border-gray-800 relative shadow-2xl">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-black text-white italic">SYSTEM_CONFIG</h2>
-                    <button @click="showSettings = false" class="text-gray-500 hover:text-white"><i class="fa-solid fa-x"></i></button>
-                </div>
-                
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">Google API Key</label>
-                        <input type="password" x-model="settings.apiKey" placeholder="AIzaSy..." 
-                               class="w-full bg-black/50 border border-gray-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all">
-                        <p class="text-[9px] text-gray-500 mt-2 italic px-1">Get your free key from Google AI Studio.</p>
-                    </div>
-
-                    <button @click="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-blue-600/20 uppercase text-xs tracking-widest">
-                        Save Configuration
-                    </button>
-                </div>
+            <div x-show="isLoading" class="flex gap-2 items-center text-gray-500 text-xs animate-pulse">
+                <div class="w-2 h-2 bg-gray-500 rounded-full"></div>
+                Hugli AI is thinking...
             </div>
         </div>
 
-    </div>
+        <div class="p-4 pb-8 md:px-[20%] bg-gradient-to-t from-[#212121] via-[#212121] to-transparent">
+            <form @submit.prevent="sendMessage()" class="relative max-w-4xl mx-auto">
+                <textarea x-model="userInput" 
+                          @keydown.enter.prevent="sendMessage()"
+                          placeholder="Message Hugli AI..." 
+                          class="w-full bg-[#2f2f2f] border border-[#424242] rounded-2xl py-4 px-6 pr-14 focus:outline-none focus:border-[#676767] resize-none overflow-hidden"
+                          rows="1"></textarea>
+                <button type="submit" :disabled="!userInput.trim() || isLoading"
+                        class="absolute right-3 bottom-3 p-2 bg-white text-black rounded-xl disabled:opacity-20 transition-all hover:scale-105 active:scale-95">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                </button>
+            </form>
+            <p class="text-[10px] text-center text-gray-500 mt-4">Hugli AI can make mistakes. Consider checking important info.</p>
+        </div>
+    </main>
 
-    <script>
-        function chatApp() {
-            return {
-                sidebarOpen: window.innerWidth > 768,
-                showSettings: false,
-                isLoading: false,
-                userInput: '',
-                currentChatId: null,
-                messages: [],
-                history: [],
-                settings: { apiKey: '' },
-
-                init() {
-                    this.history = JSON.parse(localStorage.getItem('gemini_pro_free_history') || '[]');
-                    const saved = localStorage.getItem('gemini_pro_free_settings');
-                    if (saved) this.settings = JSON.parse(saved);
-                    
-                    if (this.history.length > 0) this.loadChat(this.history[0].id);
-                    else this.createNewChat();
-
-                    // Handle Responsive Sidebar
-                    window.addEventListener('resize', () => {
-                        this.sidebarOpen = window.innerWidth > 768;
-                    });
-                },
-
-                saveSettings() {
-                    localStorage.setItem('gemini_pro_free_settings', JSON.stringify(this.settings));
-                    this.showSettings = false;
-                },
-
-                createNewChat() {
-                    this.currentChatId = Date.now();
-                    this.messages = [];
-                    this.userInput = '';
-                },
-
-                loadChat(id) {
-                    const chat = this.history.find(h => h.id === id);
-                    if (chat) {
-                        this.currentChatId = id;
-                        this.messages = JSON.parse(JSON.stringify(chat.messages));
-                        this.scrollToBottom();
-                    }
-                },
-
-                deleteChat(id) {
-                    this.history = this.history.filter(h => h.id !== id);
-                    this.saveToStorage();
-                    if (this.currentChatId === id) this.createNewChat();
-                },
-
-                saveToStorage() {
-                    localStorage.setItem('gemini_pro_free_history', JSON.stringify(this.history));
-                },
-
-                async sendMessage() {
-                    const input = this.userInput.trim();
-                    if (!input) return;
-
-                    this.userInput = '';
-                    this.messages.push({ role: 'user', content: input });
-                    this.isLoading = true;
-                    this.scrollToBottom();
-
-                    try {
-                        if (input.toLowerCase().startsWith('/draw')) {
-                            // IMAGE GENERATION (Pollinations AI - No Key Needed)
-                            const prompt = input.replace(/\/draw\s*/i, '');
-                            const seed = Math.floor(Math.random() * 999999);
-                            const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?seed=${seed}&width=1024&height=1024&nologo=true&model=flux`;
-                            
-                            this.messages.push({ 
-                                role: 'assistant', 
-                                content: `Generated image for: **${prompt}**`, 
-                                image: imgUrl 
-                            });
-                        } else {
-                            // TEXT GENERATION (Gemini 1.5 Flash Fix)
-                            if(!this.settings.apiKey) {
-                                this.showSettings = true;
-                                throw new Error("Please enter your API Key first.");
-                            }
-
-                            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.settings.apiKey}`;
-                            
-                            const resp = await fetch(url, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                    contents: this.messages.filter(m => !m.image).map(m => ({
-                                        role: m.role === 'assistant' ? 'model' : 'user',
-                                        parts: [{ text: m.content }]
-                                    }))
-                                })
-                            });
-
-                            const data = await resp.json();
-                            if (data.error) throw new Error(data.error.message);
-                            
-                            const aiResponse = data.candidates[0].content.parts[0].text;
-                            this.messages.push({ role: 'assistant', content: aiResponse });
-                        }
-                        this.updateHistory(input);
-                    } catch (e) {
-                        this.messages.push({ role: 'assistant', content: `❌ **Error:** ${e.message}` });
-                    } finally {
-                        this.isLoading = false;
-                        this.scrollToBottom();
-                    }
-                },
-
-                updateHistory(text) {
-                    const idx = this.history.findIndex(h => h.id === this.currentChatId);
-                    if (idx > -1) {
-                        this.history[idx].messages = [...this.messages];
-                    } else {
-                        this.history.unshift({
-                            id: this.currentChatId,
-                            title: text.substring(0, 30),
-                            messages: [...this.messages]
-                        });
-                    }
-                    this.saveToStorage();
-                },
-
-                scrollToBottom() {
-                    setTimeout(() => {
-                        const win = document.getElementById('chat-window');
-                        if(win) win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' });
-                    }, 150);
-                },
-
-                renderMarkdown(text) {
-                    if(!text) return '';
-                    return text
-                        .replace(/[<>]/g, m => ({'<':'&lt;','>':'&gt;'}[m]))
-                        .replace(/\n/g, '<br>')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-400 font-bold">$1</strong>')
-                        .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-                        .replace(/`(.*?)`/g, '<code class="bg-gray-800 px-1.5 py-0.5 rounded text-pink-400">$1</code>');
-                }
-            }
-        }
-    </script>
+    <script src="chat.js"></script>
 </body>
 </html>
