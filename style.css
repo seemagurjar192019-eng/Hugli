@@ -1,121 +1,41 @@
-/* Basic Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
 body {
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
+    height: 100vh; display: flex; justify-content: center; align-items: center; color: white;
 }
 
-/* Chat Container - Glass Effect */
 #chat-container {
-    width: 90%;
-    max-width: 400px;
-    height: 80vh;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    width: 95%; max-width: 450px; height: 85vh;
+    background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
+    display: flex; flex-direction: column; overflow: hidden;
 }
 
-/* Header */
 #chat-header {
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    text-align: center;
-    font-weight: bold;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 15px; background: rgba(255, 255, 255, 0.05);
+    display: flex; justify-content: space-between; align-items: center; font-weight: 600;
 }
 
-/* Messages Area */
-#chat-box {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+#chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
 
-/* Individual Message Style */
-#chat-box div {
-    max-width: 80%;
-    padding: 10px 15px;
-    border-radius: 15px;
-    font-size: 14px;
-    line-height: 1.4;
-}
+/* Message Bubbles */
+.user-msg, .ai-msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 14px; }
+.user-msg { align-self: flex-end; background: #0084ff; color: white; }
+.ai-msg { align-self: flex-start; background: rgba(255, 255, 255, 0.1); color: #00ffcc; }
 
-/* User Message (Right Side) */
-#chat-box div:has(strong:contains("You")) {
-    align-self: flex-end;
-    background: #0084ff;
-    color: white;
-}
-
-/* AI Message (Left Side) */
-#chat-box div:has(strong:contains("Hugli AI")) {
-    align-self: flex-start;
-    background: rgba(255, 255, 255, 0.2);
-    color: #00ffcc;
-}
-
-/* Input Area */
-#input-area {
-    padding: 15px;
-    display: flex;
-    gap: 10px;
-    background: rgba(0, 0, 0, 0.2);
-}
-
+#input-area { padding: 15px; display: flex; gap: 10px; background: rgba(0, 0, 0, 0.2); }
 #user-input {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    padding: 10px;
-    color: white;
-    outline: none;
+    flex: 1; background: transparent; border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px; padding: 10px; color: white; outline: none;
 }
+#send-btn { background: #00ffcc; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer; }
 
-#user-input:focus {
-    border-color: #00ffcc;
+/* Sidebar */
+.sidebar {
+    height: 100%; width: 0; position: fixed; z-index: 100; top: 0; left: 0;
+    background: rgba(15, 12, 41, 0.95); overflow-x: hidden; transition: 0.5s; padding-top: 60px;
 }
-
-/* Send Button */
-#send-btn {
-    background: #00ffcc;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    color: #0f0c29;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-#send-btn:hover {
-    background: #00cca3;
-    transform: scale(1.05);
-}
-
-/* Scrollbar Style */
-#chat-box::-webkit-scrollbar {
-    width: 5px;
-}
-#chat-box::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
+.menu-items a { padding: 15px 25px; text-decoration: none; font-size: 18px; color: #ccc; display: block; }
+.sidebar .closebtn { position: absolute; top: 10px; right: 25px; font-size: 30px; color: white; text-decoration: none; }
+.openbtn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
