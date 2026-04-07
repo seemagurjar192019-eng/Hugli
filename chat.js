@@ -1,60 +1,52 @@
-// 1. Backend URL (Check karlo sahi hai na?)
 const BACKEND_URL = "https://ai-backend-8h5f.onrender.com/api/chat";
 
-// Function jo message bhejega
 async function sendMessage() {
-    const userInput = document.getElementById('user-input');
-    const chatBox = document.getElementById('chat-box');
-    
-    const message = userInput.value.trim();
-    if (!message) return;
+    const input = document.getElementById('user-input');
+    const box = document.getElementById('chat-box');
+    const msg = input.value.trim();
 
-    console.log("Sending message:", message); // Debugging line
+    if (!msg) return;
 
-    // User ka message screen par dikhao
-    const userDiv = document.createElement('div');
-    userDiv.innerHTML = `<strong>You:</strong> ${message}`;
-    chatBox.appendChild(userDiv);
-    
-    userInput.value = "";
+    // Display User Message
+    const uDiv = document.createElement('div');
+    uDiv.className = 'user-msg';
+    uDiv.innerHTML = `<b>You:</b> ${msg}`;
+    box.appendChild(uDiv);
+    input.value = "";
+    box.scrollTop = box.scrollHeight;
 
     try {
-        const response = await fetch(BACKEND_URL, {
+        const res = await fetch(BACKEND_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message })
+            body: JSON.stringify({ message: msg })
         });
 
-        const data = await response.json();
-        console.log("Response from server:", data); // Debugging line
+        const data = await res.json();
+        
+        // Display AI Message
+        const aDiv = document.createElement('div');
+        aDiv.className = 'ai-msg';
+        aDiv.innerHTML = `<b>Hugli AI:</b> ${data.reply || "Error: No Response"}`;
+        box.appendChild(aDiv);
 
-        if (data.reply) {
-            const aiDiv = document.createElement('div');
-            aiDiv.innerHTML = `<strong>Hugli AI:</strong> ${data.reply}`;
-            aiDiv.style.color = "#00ffcc"; // Thoda alag color taaki dikhe
-            chatBox.appendChild(aiDiv);
-        }
-    } catch (error) {
-        console.error("Fetch Error:", error);
-        const errDiv = document.createElement('div');
-        errDiv.innerHTML = `<b style="color:red;">Error: Backend connect nahi hua!</b>`;
-        chatBox.appendChild(errDiv);
+    } catch (e) {
+        const eDiv = document.createElement('div');
+        eDiv.className = 'ai-msg';
+        eDiv.style.color = 'red';
+        eDiv.innerHTML = `<b>Error:</b> Server offline lag raha hai!`;
+        box.appendChild(eDiv);
     }
-    chatBox.scrollTop = chatBox.scrollHeight;
+    box.scrollTop = box.scrollHeight;
 }
 
-// 2. Button par click event lagane ka sabse pakka tarika
-document.addEventListener('DOMContentLoaded', () => {
-    const sendBtn = document.getElementById('send-btn');
-    if(sendBtn) {
-        sendBtn.onclick = sendMessage;
-        console.log("Send button ready!");
-    } else {
-        console.error("Button with ID 'send-btn' not found!");
-    }
-
-    // Enter key support
-    document.getElementById('user-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+// Event Listeners
+document.getElementById('send-btn').addEventListener('click', sendMessage);
+document.getElementById('user-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
 });
+
+// Sidebar Controls
+function openNav() { document.getElementById("sidebar").style.width = "250px"; }
+function closeNav() { document.getElementById("sidebar").style.width = "0"; }
+function exitChat() { if(confirm("Close Hugli AI?")) window.location.reload(); }
