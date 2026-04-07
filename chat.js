@@ -12,18 +12,17 @@ function chatApp() {
         },
 
         async sendMessage() {
-            const text = this.userInput.trim();
-            if (!text || this.isLoading) return;
+            const input = this.userInput.trim();
+            if (!input || this.isLoading) return;
 
-            // 1. User ka message turant add karo
-            this.messages.push({ role: 'user', content: text });
+            // 1. User ka message add karo
+            this.messages.push({ role: 'user', content: input });
             this.userInput = '';
             this.isLoading = true;
-            
-            // Scroll niche karo
-            this.$nextTick(() => this.scrollToBottom());
+            this.scrollToBottom();
 
             try {
+                // Aapka live backend link
                 const backendUrl = "https://ai-backend-8h5f.onrender.com/api/chat";
 
                 const response = await fetch(backendUrl, {
@@ -38,43 +37,43 @@ function chatApp() {
                 });
 
                 const data = await response.json();
-                
+
                 if (data && data.candidates && data.candidates[0].content.parts[0].text) {
-                    const aiResponse = data.candidates[0].content.parts[0].text;
-                    // 2. AI ka reply yahan add ho raha hai
-                    this.messages.push({ role: 'assistant', content: aiResponse });
+                    const aiReply = data.candidates[0].content.parts[0].text;
+                    // 2. AI ka reply yahan push ho raha hai
+                    this.messages.push({ role: 'assistant', content: aiReply });
                 } else {
-                    throw new Error("Invalid response format");
+                    throw new Error("Invalid format");
                 }
 
             } catch (error) {
-                console.error("Error:", error);
+                console.error("Fetch error:", error);
                 this.messages.push({ 
                     role: 'assistant', 
-                    content: "⚠️ **System Error:** Reply fetch nahi ho paya. Ek baar phir try karein." 
+                    content: "⚠️ **Server Busy:** Render ka free server 'Sleep' mode mein tha. Kripya 30 seconds baad phir se message bhejien, ab ye jaag chuka hai." 
                 });
             } finally {
                 this.isLoading = false;
-                this.$nextTick(() => this.scrollToBottom());
+                this.scrollToBottom();
             }
         },
 
-        // Ye function text ko HTML mein badalta hai
+        // Is function se text screen par dikhta hai
         renderMarkdown(text) {
             if (!text) return "";
             return text
-                .replace(/[<>]/g, m => ({'<':'&lt;','>':'&gt;'}[m]))
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold text
+                .replace(/[<>]/g, m => ({'<':'&lt;','>':'&gt;'}[m])) // Security
+                .replace(/\*\*(.*?)\*\*/g, '<b class="text-white font-bold">$1</b>') // Bold
                 .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>') // Code blocks
-                .replace(/`(.*?)`/g, '<code class="bg-gray-700 px-1 rounded">$1</code>') // Inline code
-                .split('\n').join('<br>'); // Line breaks
+                .replace(/`(.*?)`/g, '<code class="bg-[#424242] px-1 rounded text-blue-300">$1</code>') // Inline code
+                .replace(/\n/g, '<br>'); // Line breaks ko HTML mein badalna
         },
 
         scrollToBottom() {
-            const win = document.getElementById('chat-window');
-            if (win) {
-                win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' });
-            }
+            setTimeout(() => {
+                const win = document.getElementById('chat-window');
+                if (win) win.scrollTop = win.scrollHeight;
+            }, 50);
         }
     }
 }
