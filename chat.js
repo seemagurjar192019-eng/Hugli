@@ -1,67 +1,54 @@
-function chatApp() {
-    return {
-        messages: [],
-        userInput: '',
-        isLoading: false,
+const chatBox = document.getElementById('chat-box');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
 
-        async sendMessage() {
-            const input = this.userInput.trim();
-            if (!input || this.isLoading) return;
+// 1. Apne Render Backend ka sahi URL yahan dalo
+const BACKEND_URL = "https://ai-backend-8h5f.onrender.com/api/chat";
 
-            // User message ko add karo
-            this.messages.push({ role: 'user', content: input });
-            this.userInput = '';
-            this.isLoading = true;
-            this.scrollToBottom();
+async function sendMessage() {
+    const message = userInput.value.trim();
+    if (!message) return;
 
-            try {
-                // Link check: Isko confirm kar lena ki render link yahi hai
-                const backendUrl = "https://ai-backend-8h5f.onrender.com/api/chat";
+    // User ka message screen par dikhao
+    appendMessage("You", message);
+    userInput.value = "";
 
-                const response = await fetch(backendUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: this.messages.map(m => ({
-                            role: m.role === 'assistant' ? 'model' : 'user',
-                            parts: [{ text: m.content }]
-                        }))
-                    })
-                });
+    try {
+        // 2. Backend ko message bhejo (Bina kisi API Key ke)
+        const response = await fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message })
+        });
 
-                const data = await response.json();
-                
-                // Reply check
-                if (data && data.candidates) {
-                    const text = data.candidates[0].content.parts[0].text;
-                    this.messages.push({ role: 'assistant', content: text });
-                } else {
-                    this.messages.push({ role: 'assistant', content: "Backend se error aaya hai." });
-                }
+        const data = await response.json();
 
-            } catch (error) {
-                this.messages.push({ role: 'assistant', content: "⚠️ Server response nahi de raha. 10 second baad try karein." });
-            } finally {
-                this.isLoading = false;
-                this.scrollToBottom();
-            }
-        },
-
-        // Markdown Fix: Sabse safe function
-        renderMarkdown(text) {
-            if (!text) return "";
-            let html = text
-                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // Bold
-                .replace(/\n/g, '<br>') // Line break
-                .replace(/```([\s\S]*?)```/g, '<pre class="bg-black p-2 rounded"><code>$1</code></pre>'); // Code
-            return html;
-        },
-
-        scrollToBottom() {
-            setTimeout(() => {
-                const win = document.getElementById('chat-window');
-                if (win) win.scrollTop = win.scrollHeight;
-            }, 50);
+        if (data.reply) {
+            // AI ka jawab screen par dikhao
+            appendMessage("Hugli AI", data.reply);
+        } else {
+            appendMessage("Error", "Backend se sahi jawab nahi aaya.");
         }
+
+    } catch (error) {
+        console.error("Error:", error);
+        appendMessage("Error", "Connection nahi ho pa raha. Check karo Render Live hai ya nahi.");
     }
 }
+
+function appendMessage(sender, text) {
+    const msgDiv = document.createElement('div');
+    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    msgDiv.style.margin = "10px 0";
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Enter key dabane par message jaye
+userInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
+
+sendBtn.addEventListener('click', sendMessage);
