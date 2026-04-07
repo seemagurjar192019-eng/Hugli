@@ -1,104 +1,53 @@
-/* Hugli AI - Custom Glassmorphism Theme */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-
-:root {
-    --bg-dark: #0a0b0d;
-    --glass-bg: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --accent-blue: #3b82f6;
-    --text-main: #e2e8f0;
-}
+/* Custom Styles for Hugli AI */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap');
 
 body {
-    background-color: var(--bg-dark);
-    font-family: 'Inter', sans-serif;
-    color: var(--text-main);
-    margin: 0;
-    overflow: hidden;
+    font-family: 'Sora', sans-serif;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphism Card Style */
-.glass-panel {
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
+/* User Message Bubble */
+.user-bubble {
+    background-color: #303030;
+    padding: 12px 20px;
     border-radius: 1.5rem;
+    align-self: flex-start;
+    display: inline-block;
 }
 
-/* Sidebar Styling */
-.sidebar {
-    background: rgba(0, 0, 0, 0.4);
-    border-right: 1px solid var(--glass-border);
-    transition: all 0.3s ease;
+/* AI Content Styling */
+.ai-content {
+    padding: 5px 0 20px 0;
+    color: #dbdbdb;
 }
 
-/* Chat Bubbles */
-.user-msg {
-    background: var(--accent-blue);
-    color: white;
-    border-radius: 1.2rem 1.2rem 0 1.2rem;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+/* Code Blocks Styling */
+pre {
+    background-color: #0d0d0d;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    border: 1px solid #333;
 }
 
-.ai-msg {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    color: var(--text-main);
-    border-radius: 1.2rem 1.2rem 1.2rem 0;
+code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    color: #e0e0e0;
 }
 
-/* Input Area */
-.input-container {
-    background: rgba(20, 21, 23, 0.8);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--glass-border);
-}
-
-.chat-input {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--glass-border);
-    color: white;
-    transition: border 0.3s ease;
-}
-
-.chat-input:focus {
-    border-color: var(--accent-blue);
-    outline: none;
-}
-
-/* Custom Scrollbar */
+/* Hide scrollbar for Chrome/Safari */
 ::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
 }
 ::-webkit-scrollbar-track {
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--glass-border);
+    background: #424242;
     border-radius: 10px;
 }
 
-/* Typing Animation */
-.typing-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--accent-blue);
-    border-radius: 50%;
-    animation: bounce 1.4s infinite ease-in-out;
-}
-
-@keyframes bounce {
-    0%, 80%, 100% { transform: scale(0); }
-    40% { transform: scale(1.0); }
-}
-
-/* Mobile Responsive Adjustments */
-@media (max-width: 768px) {
-    .glass-panel {
-        border-radius: 1rem;
-    }
-    .chat-window {
-        padding: 10px;
-    }
-}
+/* Animations */
+[x-cloak] { display: none !important; }
