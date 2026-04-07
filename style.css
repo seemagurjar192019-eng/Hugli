@@ -1,53 +1,121 @@
-/* Hugli AI - ChatGPT Style */
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap');
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
 
 body {
-    font-family: 'Sora', sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
 }
 
-/* User Message Box */
-.user-bubble {
-    background-color: #303030;
-    padding: 14px 20px;
-    border-radius: 1.5rem;
-    border: 1px solid rgba(255,255,255,0.05);
-    color: #f1f1f1;
-    display: inline-block;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+/* Chat Container - Glass Effect */
+#chat-container {
+    width: 90%;
+    max-width: 400px;
+    height: 80vh;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
-/* AI Message Styling */
-.ai-content {
-    color: #e5e5e5;
-    padding-left: 2px;
-    white-space: pre-wrap; /* Yeh important hai line breaks dikhane ke liye */
+/* Header */
+#chat-header {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Code Formatting */
-pre {
-    background-color: #0d0d0d;
-    padding: 1.2rem;
-    border-radius: 12px;
-    margin: 15px 0;
-    overflow-x: auto;
-    border: 1px solid #333;
+/* Messages Area */
+#chat-box {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-code {
-    font-family: 'monospace';
-    color: #7dd3fc;
+/* Individual Message Style */
+#chat-box div {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    font-size: 14px;
+    line-height: 1.4;
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeIn {
-    animation: fadeIn 0.3s ease-out forwards;
+/* User Message (Right Side) */
+#chat-box div:has(strong:contains("You")) {
+    align-self: flex-end;
+    background: #0084ff;
+    color: white;
 }
 
-/* Scrollbar Fix */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #424242; border-radius: 10px; }
+/* AI Message (Left Side) */
+#chat-box div:has(strong:contains("Hugli AI")) {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, 0.2);
+    color: #00ffcc;
+}
+
+/* Input Area */
+#input-area {
+    padding: 15px;
+    display: flex;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#user-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    color: white;
+    outline: none;
+}
+
+#user-input:focus {
+    border-color: #00ffcc;
+}
+
+/* Send Button */
+#send-btn {
+    background: #00ffcc;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    color: #0f0c29;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#send-btn:hover {
+    background: #00cca3;
+    transform: scale(1.05);
+}
+
+/* Scrollbar Style */
+#chat-box::-webkit-scrollbar {
+    width: 5px;
+}
+#chat-box::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
