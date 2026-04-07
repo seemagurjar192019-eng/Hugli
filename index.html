@@ -1,58 +1,44 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hugli AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js Fix -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <title>Hugli AI - Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body x-data="chatApp()" class="flex h-screen bg-[#212121] text-[#ececec] overflow-hidden">
+<body>
 
-    <main class="flex-1 flex flex-col h-full w-full">
-        <!-- Header -->
-        <header class="p-4 border-b border-[#303030] flex justify-center bg-[#212121]">
-            <span class="font-bold text-white tracking-widest">HUGLI AI PRO</span>
-        </header>
-
-        <!-- Messages Area -->
-        <div id="chat-window" class="flex-1 overflow-y-auto px-4 md:px-[20%] py-6 space-y-6">
-            <template x-for="(msg, index) in messages" :key="index">
-                <div class="flex flex-col">
-                    <!-- User/AI Icon & Name -->
-                    <div class="flex items-center gap-2 mb-1">
-                        <div :class="msg.role === 'user' ? 'bg-blue-600' : 'bg-green-700'" 
-                             class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md"
-                             x-text="msg.role === 'user' ? 'U' : 'H'"></div>
-                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter" 
-                              x-text="msg.role === 'user' ? 'You' : 'Hugli AI'"></span>
-                    </div>
-                    
-                    <!-- Message Content (Fix: x-html use kar rahe hain par safely) -->
-                    <div :class="msg.role === 'user' ? 'user-bubble' : 'ai-content'" 
-                         class="text-[15px] leading-relaxed"
-                         x-html="renderMarkdown(msg.content)">
-                    </div>
-                </div>
-            </template>
-
-            <!-- Thinking indicator -->
-            <div x-show="isLoading" class="text-xs text-gray-600 animate-pulse">Hugli AI is typing...</div>
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <div class="menu-items">
+            <a href="#"><i class="fas fa-home"></i> Home</a>
+            <a href="#"><i class="fas fa-image"></i> Image Gen <small>(Soon)</small></a>
+            <a href="#"><i class="fas fa-video"></i> Video Gen <small>(Soon)</small></a>
+            <a href="#" onclick="exitChat()"><i class="fas fa-sign-out-alt"></i> Exit</a>
         </div>
+    </div>
 
-        <!-- Input Box -->
-        <div class="p-4 md:px-[20%]">
-            <form @submit.prevent="sendMessage()" class="relative">
-                <input type="text" x-model="userInput" placeholder="Message Hugli AI..." 
-                       class="w-full bg-[#2f2f2f] border border-[#424242] rounded-2xl py-4 px-5 text-white focus:outline-none">
-                <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-white bg-blue-600 rounded-xl">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
-                </button>
-            </form>
+    <div id="main">
+        <div id="chat-container">
+            <div id="chat-header">
+                <button class="openbtn" onclick="openNav()"><i class="fas fa-bars"></i></button>
+                <span>HUGLI AI</span>
+                <div style="width:20px;"></div>
+            </div>
+
+            <div id="chat-box">
+                <div class="ai-msg"><b>Hugli AI:</b> Swagat hai bhai! Bolo kya help karun?</div>
+            </div>
+
+            <div id="input-area">
+                <input type="text" id="user-input" placeholder="Kuch likhiye..." autocomplete="off">
+                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
         </div>
-    </main>
+    </div>
 
     <script src="chat.js"></script>
 </body>
