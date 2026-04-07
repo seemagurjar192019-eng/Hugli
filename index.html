@@ -1,76 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hugli AI</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js (Logic ke liye) -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body x-data="chatApp()" class="flex h-screen bg-[#212121] text-[#ececec]">
+<body x-data="chatApp()" class="flex h-screen bg-[#212121] text-[#ececec] overflow-hidden">
 
+    <!-- Sidebar (Desktop only) -->
     <aside class="w-64 bg-[#171717] hidden md:flex flex-col border-r border-[#303030] p-4">
-        <h1 class="text-xl font-bold mb-8 px-2 tracking-tight">Hugli AI</h1>
-        <button @click="createNewChat()" class="flex items-center gap-3 p-3 hover:bg-[#2f2f2f] rounded-lg transition border border-[#424242] text-sm">
-            <span class="text-lg">+</span> New Chat
+        <h1 class="text-xl font-bold mb-8 px-2 tracking-tight text-white">Hugli AI</h1>
+        <button @click="createNewChat()" class="flex items-center justify-center gap-3 p-3 hover:bg-[#2f2f2f] rounded-lg transition border border-[#424242] text-sm font-medium">
+            <span>+</span> New Chat
         </button>
-        <div class="flex-1 mt-10 overflow-y-auto space-y-2">
-            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest px-2">Recent</p>
-            <div class="p-2 text-xs text-gray-500 italic px-2">No history yet</div>
+        <div class="flex-1 mt-10 overflow-y-auto">
+            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest px-2 mb-4">Recent Chats</p>
+            <div class="px-2 text-xs text-gray-600 italic">No history yet</div>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative h-full">
+    <!-- Main Chat Content -->
+    <main class="flex-1 flex flex-col relative h-full w-full">
         
-        <header class="md:hidden p-4 border-b border-[#303030] flex justify-between items-center">
-            <span class="font-bold">Hugli AI</span>
-            <button @click="createNewChat()" class="text-xl">+</button>
+        <!-- Mobile Header -->
+        <header class="md:hidden p-4 border-b border-[#303030] flex justify-between items-center bg-[#212121]">
+            <span class="font-bold text-white">Hugli AI</span>
+            <button @click="createNewChat()" class="text-2xl text-gray-400">+</button>
         </header>
 
-        <div id="chat-window" class="flex-1 overflow-y-auto px-4 md:px-[20%] py-10 space-y-10">
+        <!-- Messages Display -->
+        <div id="chat-window" class="flex-1 overflow-y-auto px-4 md:px-[20%] py-6 space-y-8 scroll-smooth">
+            
+            <!-- Welcome Screen (Jab koi message na ho) -->
             <template x-if="messages.length === 0">
-                <div class="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-50">
-                    <div class="w-12 h-12 bg-[#303030] rounded-full flex items-center justify-center font-bold text-xl">H</div>
-                    <p class="text-xl font-medium">Main aapki kaise madad kar sakta hoon?</p>
+                <div class="h-full flex flex-col items-center justify-center text-center opacity-40 py-20">
+                    <div class="w-16 h-16 bg-[#303030] rounded-full flex items-center justify-center text-2xl font-bold mb-4">H</div>
+                    <p class="text-xl font-semibold">Main aapki kaise madad kar sakta hoon?</p>
                 </div>
             </template>
 
+            <!-- Loop through messages -->
             <template x-for="(msg, index) in messages" :key="index">
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-2 mb-2">
-                        <div :class="msg.role === 'user' ? 'bg-blue-600' : 'bg-green-600'" 
-                             class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-                             x-text="msg.role === 'user' ? 'U' : 'H'"></div>
-                        <span class="text-xs font-bold uppercase tracking-tighter text-gray-400" 
+                <div class="flex flex-col animate-fadeIn">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div :class="msg.role === 'user' ? 'bg-blue-600' : 'bg-green-700'" 
+                             class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shadow-md"
+                             x-text="msg.role === 'user' ? 'U' : 'AI'"></div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-gray-500" 
                               x-text="msg.role === 'user' ? 'You' : 'Hugli AI'"></span>
                     </div>
                     <div :class="msg.role === 'user' ? 'user-bubble' : 'ai-content'" 
-                         class="text-[15px] leading-relaxed"
+                         class="text-[15px] leading-relaxed break-words"
                          x-html="renderMarkdown(msg.content)">
                     </div>
                 </div>
             </template>
 
-            <div x-show="isLoading" class="flex gap-2 items-center text-gray-500 text-xs animate-pulse">
-                <div class="w-2 h-2 bg-gray-500 rounded-full"></div>
-                Hugli AI is thinking...
+            <!-- Loading Spinner -->
+            <div x-show="isLoading" class="flex items-center gap-3 text-gray-500 text-xs py-4">
+                <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                Thinking...
             </div>
         </div>
 
-        <div class="p-4 pb-8 md:px-[20%] bg-gradient-to-t from-[#212121] via-[#212121] to-transparent">
-            <form @submit.prevent="sendMessage()" class="relative max-w-4xl mx-auto">
-                <textarea x-model="userInput" 
-                          @keydown.enter.prevent="sendMessage()"
-                          placeholder="Message Hugli AI..." 
-                          class="w-full bg-[#2f2f2f] border border-[#424242] rounded-2xl py-4 px-6 pr-14 focus:outline-none focus:border-[#676767] resize-none overflow-hidden"
-                          rows="1"></textarea>
-                <button type="submit" :disabled="!userInput.trim() || isLoading"
-                        class="absolute right-3 bottom-3 p-2 bg-white text-black rounded-xl disabled:opacity-20 transition-all hover:scale-105 active:scale-95">
+        <!-- Input Box Area -->
+        <div class="p-4 md:px-[20%] bg-gradient-to-t from-[#212121] via-[#212121] to-transparent">
+            <form @submit.prevent="sendMessage()" class="relative max-w-4xl mx-auto shadow-2xl">
+                <input type="text" 
+                       x-model="userInput" 
+                       placeholder="Ask anything to Hugli AI..." 
+                       class="w-full bg-[#2f2f2f] border border-[#424242] rounded-2xl py-4 px-6 pr-14 text-white focus:outline-none focus:border-[#676767] transition-all shadow-inner"
+                       :disabled="isLoading">
+                <button type="submit" 
+                        :disabled="!userInput.trim() || isLoading"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white text-black rounded-xl disabled:opacity-10 transition-all hover:scale-105 active:scale-95">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
                 </button>
             </form>
-            <p class="text-[10px] text-center text-gray-500 mt-4">Hugli AI can make mistakes. Consider checking important info.</p>
+            <p class="text-[10px] text-center text-gray-600 mt-4 font-medium italic">Powered by Hugli AI Engine</p>
         </div>
     </main>
 
