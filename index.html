@@ -10,7 +10,6 @@
 </head>
 <body>
 
-    <!-- Sidebar -->
     <div id="sidebar" class="sidebar">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <div class="menu-items">
@@ -35,11 +34,35 @@
 
             <div id="input-area">
                 <input type="text" id="user-input" placeholder="Kuch likhiye..." autocomplete="off">
-                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+                <button id="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
 
     <script src="chat.js"></script>
+
+    <script>
+        // Sidebar functions
+        function openNav() {
+            document.getElementById("sidebar").style.width = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("sidebar").style.width = "0";
+        }
+
+        function exitChat() {
+            if(confirm("Kya aap exit karna chahte hain?")) {
+                window.close();
+            }
+        }
+
+        // Enter key support
+        document.getElementById('user-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
 </body>
 </html>
