@@ -5,7 +5,7 @@ function chatApp() {
         isLoading: false,
 
         createNewChat() {
-            if (confirm("Nayi chat shuru karein? Purani chat clear ho jayegi.")) {
+            if (confirm("Nayi chat shuru karein?")) {
                 this.messages = [];
                 this.userInput = '';
             }
@@ -15,14 +15,15 @@ function chatApp() {
             const text = this.userInput.trim();
             if (!text || this.isLoading) return;
 
-            // User ka message screen par dikhao
+            // 1. User ka message turant add karo
             this.messages.push({ role: 'user', content: text });
             this.userInput = '';
             this.isLoading = true;
-            this.scrollToBottom();
+            
+            // Scroll niche karo
+            this.$nextTick(() => this.scrollToBottom());
 
             try {
-                // AAPKA LIVE RENDER BACKEND
                 const backendUrl = "https://ai-backend-8h5f.onrender.com/api/chat";
 
                 const response = await fetch(backendUrl, {
@@ -38,39 +39,42 @@ function chatApp() {
 
                 const data = await response.json();
                 
-                if (data.error) throw new Error(data.error);
-
-                // AI ka jawab screen par dikhao
-                const aiResponse = data.candidates[0].content.parts[0].text;
-                this.messages.push({ role: 'assistant', content: aiResponse });
+                if (data && data.candidates && data.candidates[0].content.parts[0].text) {
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    // 2. AI ka reply yahan add ho raha hai
+                    this.messages.push({ role: 'assistant', content: aiResponse });
+                } else {
+                    throw new Error("Invalid response format");
+                }
 
             } catch (error) {
                 console.error("Error:", error);
                 this.messages.push({ 
                     role: 'assistant', 
-                    content: "⚠️ **System Error:** Backend connection mein dikkat hai. Shayad server jaag raha hai, kripya 30 seconds baad phir koshish karein." 
+                    content: "⚠️ **System Error:** Reply fetch nahi ho paya. Ek baar phir try karein." 
                 });
             } finally {
                 this.isLoading = false;
-                this.scrollToBottom();
+                this.$nextTick(() => this.scrollToBottom());
             }
         },
 
-        // Markdown ko HTML mein badalne ke liye simple function
+        // Ye function text ko HTML mein badalta hai
         renderMarkdown(text) {
+            if (!text) return "";
             return text
                 .replace(/[<>]/g, m => ({'<':'&lt;','>':'&gt;'}[m]))
-                .replace(/\n/g, '<br>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
-                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-                .replace(/`(.*?)`/g, '<code class="bg-[#424242] px-1 rounded">$1</code>');
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold text
+                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>') // Code blocks
+                .replace(/`(.*?)`/g, '<code class="bg-gray-700 px-1 rounded">$1</code>') // Inline code
+                .split('\n').join('<br>'); // Line breaks
         },
 
         scrollToBottom() {
-            setTimeout(() => {
-                const win = document.getElementById('chat-window');
+            const win = document.getElementById('chat-window');
+            if (win) {
                 win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' });
-            }, 100);
+            }
         }
     }
 }
