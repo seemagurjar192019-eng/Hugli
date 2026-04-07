@@ -1,53 +1,53 @@
-/* Custom Styles for Hugli AI */
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap');
+/* Hugli AI - ChatGPT Style */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap');
 
 body {
     font-family: 'Sora', sans-serif;
-    -webkit-font-smoothing: antialiased;
 }
 
-/* User Message Bubble */
+/* User Message Box */
 .user-bubble {
     background-color: #303030;
-    padding: 12px 20px;
+    padding: 14px 20px;
     border-radius: 1.5rem;
-    align-self: flex-start;
+    border: 1px solid rgba(255,255,255,0.05);
+    color: #f1f1f1;
     display: inline-block;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* AI Content Styling */
+/* AI Message Styling */
 .ai-content {
-    padding: 5px 0 20px 0;
-    color: #dbdbdb;
+    color: #e5e5e5;
+    padding-left: 2px;
+    white-space: pre-wrap; /* Yeh important hai line breaks dikhane ke liye */
 }
 
-/* Code Blocks Styling */
+/* Code Formatting */
 pre {
     background-color: #0d0d0d;
-    padding: 1rem;
-    border-radius: 0.75rem;
-    margin: 1rem 0;
+    padding: 1.2rem;
+    border-radius: 12px;
+    margin: 15px 0;
     overflow-x: auto;
     border: 1px solid #333;
 }
 
 code {
-    font-family: 'Fira Code', monospace;
-    font-size: 0.85rem;
-    color: #e0e0e0;
-}
-
-/* Hide scrollbar for Chrome/Safari */
-::-webkit-scrollbar {
-    width: 6px;
-}
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-::-webkit-scrollbar-thumb {
-    background: #424242;
-    border-radius: 10px;
+    font-family: 'monospace';
+    color: #7dd3fc;
 }
 
 /* Animations */
-[x-cloak] { display: none !important; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Scrollbar Fix */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #424242; border-radius: 10px; }
