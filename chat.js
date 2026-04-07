@@ -1,24 +1,31 @@
 function chatApp() {
     return {
-        sidebarOpen: false,
-        showSettings: false,
-        isLoading: false,
-        userInput: '',
         messages: [],
-        
-        async sendMessage() {
-            const input = this.userInput.trim();
-            if (!input) return;
+        userInput: '',
+        isLoading: false,
 
+        createNewChat() {
+            if (confirm("Nayi chat shuru karein? Purani chat clear ho jayegi.")) {
+                this.messages = [];
+                this.userInput = '';
+            }
+        },
+
+        async sendMessage() {
+            const text = this.userInput.trim();
+            if (!text || this.isLoading) return;
+
+            // User ka message screen par dikhao
+            this.messages.push({ role: 'user', content: text });
             this.userInput = '';
-            this.messages.push({ role: 'user', content: input });
             this.isLoading = true;
+            this.scrollToBottom();
 
             try {
-                // Aapka Render Backend URL
+                // AAPKA LIVE RENDER BACKEND
                 const backendUrl = "https://ai-backend-8h5f.onrender.com/api/chat";
 
-                const resp = await fetch(backendUrl, {
+                const response = await fetch(backendUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -29,15 +36,41 @@ function chatApp() {
                     })
                 });
 
-                const data = await resp.json();
-                const aiText = data.candidates[0].content.parts[0].text;
-                this.messages.push({ role: 'assistant', content: aiText });
+                const data = await response.json();
+                
+                if (data.error) throw new Error(data.error);
 
-            } catch (e) {
-                this.messages.push({ role: 'assistant', content: "⚠️ Server jaag raha hai... 30 sec baad try karein." });
+                // AI ka jawab screen par dikhao
+                const aiResponse = data.candidates[0].content.parts[0].text;
+                this.messages.push({ role: 'assistant', content: aiResponse });
+
+            } catch (error) {
+                console.error("Error:", error);
+                this.messages.push({ 
+                    role: 'assistant', 
+                    content: "⚠️ **System Error:** Backend connection mein dikkat hai. Shayad server jaag raha hai, kripya 30 seconds baad phir koshish karein." 
+                });
             } finally {
                 this.isLoading = false;
+                this.scrollToBottom();
             }
+        },
+
+        // Markdown ko HTML mein badalne ke liye simple function
+        renderMarkdown(text) {
+            return text
+                .replace(/[<>]/g, m => ({'<':'&lt;','>':'&gt;'}[m]))
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                .replace(/`(.*?)`/g, '<code class="bg-[#424242] px-1 rounded">$1</code>');
+        },
+
+        scrollToBottom() {
+            setTimeout(() => {
+                const win = document.getElementById('chat-window');
+                win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' });
+            }, 100);
         }
     }
 }
