@@ -1,54 +1,60 @@
-const chatBox = document.getElementById('chat-box');
-const userInput = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-btn');
-
-// 1. Apne Render Backend ka sahi URL yahan dalo
+// 1. Backend URL (Check karlo sahi hai na?)
 const BACKEND_URL = "https://ai-backend-8h5f.onrender.com/api/chat";
 
+// Function jo message bhejega
 async function sendMessage() {
+    const userInput = document.getElementById('user-input');
+    const chatBox = document.getElementById('chat-box');
+    
     const message = userInput.value.trim();
     if (!message) return;
 
+    console.log("Sending message:", message); // Debugging line
+
     // User ka message screen par dikhao
-    appendMessage("You", message);
+    const userDiv = document.createElement('div');
+    userDiv.innerHTML = `<strong>You:</strong> ${message}`;
+    chatBox.appendChild(userDiv);
+    
     userInput.value = "";
 
     try {
-        // 2. Backend ko message bhejo (Bina kisi API Key ke)
         const response = await fetch(BACKEND_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: message })
         });
 
         const data = await response.json();
+        console.log("Response from server:", data); // Debugging line
 
         if (data.reply) {
-            // AI ka jawab screen par dikhao
-            appendMessage("Hugli AI", data.reply);
-        } else {
-            appendMessage("Error", "Backend se sahi jawab nahi aaya.");
+            const aiDiv = document.createElement('div');
+            aiDiv.innerHTML = `<strong>Hugli AI:</strong> ${data.reply}`;
+            aiDiv.style.color = "#00ffcc"; // Thoda alag color taaki dikhe
+            chatBox.appendChild(aiDiv);
         }
-
     } catch (error) {
-        console.error("Error:", error);
-        appendMessage("Error", "Connection nahi ho pa raha. Check karo Render Live hai ya nahi.");
+        console.error("Fetch Error:", error);
+        const errDiv = document.createElement('div');
+        errDiv.innerHTML = `<b style="color:red;">Error: Backend connect nahi hua!</b>`;
+        chatBox.appendChild(errDiv);
     }
-}
-
-function appendMessage(sender, text) {
-    const msgDiv = document.createElement('div');
-    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    msgDiv.style.margin = "10px 0";
-    chatBox.appendChild(msgDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Enter key dabane par message jaye
-userInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendMessage();
-});
+// 2. Button par click event lagane ka sabse pakka tarika
+document.addEventListener('DOMContentLoaded', () => {
+    const sendBtn = document.getElementById('send-btn');
+    if(sendBtn) {
+        sendBtn.onclick = sendMessage;
+        console.log("Send button ready!");
+    } else {
+        console.error("Button with ID 'send-btn' not found!");
+    }
 
-sendBtn.addEventListener('click', sendMessage);
+    // Enter key support
+    document.getElementById('user-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+});
